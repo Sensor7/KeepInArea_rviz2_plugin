@@ -1,0 +1,9 @@
+<library path="teachinmap_rviz_plugin">
+  <class name="teachinmap_rviz_plugin/TeachinMapPanel"
+         type="teachinmap_rviz_plugin::TeachinMapPanel"
+         base_class_type="rviz_common::Panel">
+    <description>
+      A custom RViz panel for defining and displaying polygons.
+    </description>
+  </class>
+</library>
