@@ -21,6 +21,7 @@
   <depend>example_interfaces</depend>
   <depend>std_msgs</depend>
   <depend>stihl_nav_msgs</depend>
+  <depend>nav_msgs</depend>
 
   <export>
     <rviz plugin="plugin_description.xml"/>

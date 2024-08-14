@@ -14,6 +14,7 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(stihl_nav_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(example_interfaces REQUIRED)
 # uncomment the following section in order to fill in
@@ -40,6 +41,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rviz_default_plugins
   geometry_msgs
   stihl_nav_msgs
+  nav_msgs
   example_interfaces
   pluginlib
 )

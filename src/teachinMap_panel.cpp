@@ -14,7 +14,7 @@
 #include <example_interfaces/srv/set_bool.hpp>
 #include <rviz_common/display_context.hpp>
 #include <rviz_common/viewport_mouse_event.hpp>
-#include <stihl_nav_msgs/srv/post_polygon_to_map.hpp>
+#include <stihl_nav_msgs/srv/post_polygon_to_map.hpp> // this is the custom service message, can be different in your case
 #include <std_msgs/msg/bool.hpp>
 #include <geometry_msgs/msg/point32.hpp>
 #include <geometry_msgs/msg/polygon.hpp>
@@ -51,6 +51,7 @@ private:
     rclcpp::Client<stihl_nav_msgs::srv::PostPolygonToMap>::SharedPtr polygon_client_;
     std::vector<geometry_msgs::msg::Point> polygon_points_;
     rviz_common::DisplayContext* context_;
+    geometry_msgs::msg::Point current_position_;
 };
 
 TeachinMapPanel::TeachinMapPanel(QWidget *parent)
@@ -70,9 +71,10 @@ TeachinMapPanel::TeachinMapPanel(QWidget *parent)
     connect(add_current_position_button_, SIGNAL(clicked()), this, SLOT(onAddCurrentPositionButtonClicked()));
 
     polygon_pub_ = node_->create_publisher<geometry_msgs::msg::PolygonStamped>("polygon_topic", 10);
-    polygon_client_ = node_->create_client<stihl_nav_msgs::srv::PostPolygonToMap>("global_costmap/post_polygon");
-    active_pub = node_->create_publisher<std_msgs::msg::Bool>("/restricted_area/active", 10);
-
+    polygon_client_ = node_->create_client<stihl_nav_msgs::srv::PostPolygonToMap>("global_costmap/post_polygon"); // this is the service to post the polygon, should write a cooresponding service client yourself
+    active_pub = node_->create_publisher<std_msgs::msg::Bool>("/restricted_area/active", 10); // this is the topic to activate the restricted area, wenn this is activated, callback function will execute a service request
+    odom_sub_ = node_->create_subscription<nav_msgs::msg::Odometry>(
+        "/ia01/odom", 10, std::bind(&TeachinMapPanel::odomCallback, this, std::placeholders::_1)); // get from odom topic
     context_ = nullptr;
 }
 
@@ -90,11 +92,6 @@ void TeachinMapPanel::onShowPolygonButtonClicked()
         active_pub->publish(msg);
         rclcpp::sleep_for(std::chrono::milliseconds(100)); // add delay to make sure
     }
-
-    // auto request = std::make_shared<example_interfaces::srv::SetBool::Request>();
-    // request->data = true;
-
-    // polygon_client_->async_send_request(request);
 }
 
 void TeachinMapPanel::onDefinePolygonButtonClicked()
@@ -147,20 +144,13 @@ void TeachinMapPanel::handleMouseClick(const Ogre::Vector3& point)
 
 void TeachinMapPanel::onAddCurrentPositionButtonClicked()
 {
-
-    geometry_msgs::msg::Point current_position;
-
-    current_position.x = 1.0; // 这是一个示例
-    current_position.y = 1.0; // 这是一个示例
-    current_position.z = 0.0; // 这是一个示例
-
-    polygon_points_.push_back(current_position);
+    polygon_points_.push_back(current_position_);
     auto request = std::make_shared<stihl_nav_msgs::srv::PostPolygonToMap::Request>();
     request->action = "add_point";
     geometry_msgs::msg::Point32 p;
-    p.x = current_position.x;
-    p.y = current_position.y;
-    p.z = current_position.z;
+    p.x = current_position_.x;
+    p.y = current_position_.y;
+    p.z = current_position_.z;
     request->polygon.points.push_back(p);
 
     auto result = polygon_client_->async_send_request(request);
@@ -169,6 +159,13 @@ void TeachinMapPanel::onAddCurrentPositionButtonClicked()
     } else {
         RCLCPP_ERROR(node_->get_logger(), "Failed to add current position");
     }
+}
+
+void TeachinMapPanel::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+    current_position_.x = msg->pose.pose.position.x;
+    current_position_.y = msg->pose.pose.position.y;
+    current_position_.z = msg->pose.pose.position.z;
 }
 
 void TeachinMapPanel::postPolygon()
