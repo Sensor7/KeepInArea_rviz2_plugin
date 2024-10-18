@@ -40,18 +40,14 @@ ament_target_dependencies(${PROJECT_NAME}
   rviz_common
   rviz_default_plugins
   geometry_msgs
-  stihl_nav_msgs
   nav_msgs
+  stihl_nav_msgs
   example_interfaces
   pluginlib
 )
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION lib
-)
-
-install(DIRECTORY include/
-  DESTINATION include
 )
 
 install(FILES plugin_description.xml
